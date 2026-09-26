@@ -55,18 +55,17 @@ jobs:
           codesign --force --deep -s - "$APP"
           codesign --verify "$APP"
 
-      - name: Package zip (保留 .app 内符号链接)
+      - name: Package tar.gz (保留 .app 符号链接与可执行权限)
         run: |
           VERSION=$(node -p "require('./package.json').version")
           test -d "$APP_DIR/douyin_downloader.app" || { echo "missing .app"; ls -R release; exit 1; }
-          # -y 保留 .app 内符号链接，避免解压后应用包损坏
-          (cd "$APP_DIR" && zip -qyr "$GITHUB_WORKSPACE/douyin_downloader_${VERSION}_macos_${{ matrix.arch }}.app.zip" douyin_downloader.app)
-          test -f "douyin_downloader_${VERSION}_macos_${{ matrix.arch }}.app.zip"
+          tar -czf "douyin_downloader_${VERSION}_macos_${{ matrix.arch }}.app.tar.gz" -C "$APP_DIR" douyin_downloader.app
+          test -f "douyin_downloader_${VERSION}_macos_${{ matrix.arch }}.app.tar.gz"
 
       - uses: actions/upload-artifact@v6
         with:
           name: macos-${{ matrix.arch }}
-          path: douyin_downloader_*.app.zip
+          path: douyin_downloader_*.app.tar.gz
           if-no-files-found: error
 
   windows:
@@ -96,18 +95,19 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      - name: Collect artifact
+      - name: Package zip
         shell: pwsh
         run: |
           $VERSION = (Get-Content package.json | ConvertFrom-Json).version
           $exe = Get-ChildItem "release/*.exe" | Select-Object -First 1
-          if (-not $exe) { throw "missing portable exe"; }
-          Copy-Item $exe.FullName "douyin_downloader_${VERSION}_windows_amd64.exe"
+          if (-not $exe) { throw "missing portable exe" }
+          Compress-Archive -Path $exe.FullName -DestinationPath "douyin_downloader_${VERSION}_windows_amd64.zip" -Force
+          if (-not (Test-Path "douyin_downloader_${VERSION}_windows_amd64.zip")) { throw "failed to create zip" }
 
       - uses: actions/upload-artifact@v6
         with:
           name: windows-amd64
-          path: douyin_downloader_*_windows_amd64.exe
+          path: douyin_downloader_*_windows_amd64.zip
           if-no-files-found: error
 
   release:
