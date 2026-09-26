@@ -68,3 +68,28 @@ export interface Config {
   defaultRatio: string
   loginTimeoutSec: number
 }
+
+// ---------- 自动更新 ----------
+
+export type UpdateType = 'asar' | 'full'
+
+export interface UpdateInfo {
+  hasUpdate: boolean
+  currentVersion: string
+  latestVersion: string
+  releaseNotes: string
+  releaseUrl: string
+  /** null = 有新版但没匹配到当前平台的包（不提示下载） */
+  updateType: UpdateType | null
+  downloadUrl: string
+  assetName: string
+  assetSize: number
+  /** GitHub API asset.digest，格式 "sha256:xxxx"，可能为空（空则跳过校验） */
+  digest: string
+}
+
+export interface UpdateProgress {
+  downloaded: number
+  total: number
+  speed: number
+}

@@ -22,6 +22,9 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v6
+        with:
+          # 需要 HEAD^ 之前的历史，用于比对上一 tag 的 Electron 版本
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
@@ -62,16 +65,40 @@ jobs:
           tar -czf "douyin_downloader_${VERSION}_macos_${{ matrix.arch }}.app.tar.gz" -C "$APP_DIR" douyin_downloader.app
           test -f "douyin_downloader_${VERSION}_macos_${{ matrix.arch }}.app.tar.gz"
 
+      # Electron 未升级时额外产出 asar 增量包（只含 app.asar，几百 KB）；
+      # Electron 升级时只发全量包 —— 客户端用「附件存不存在」判定更新方式
+      - name: Package asar update zip (Electron unchanged only)
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          SKIP=1
+          if [ -n "$PREV_TAG" ]; then
+            PREV_ELECTRON=$(git show "$PREV_TAG:package.json" 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).devDependencies.electron)}catch{console.log("")}})' || true)
+            CUR_ELECTRON=$(node -p "require('./package.json').devDependencies.electron")
+            if [ -n "$PREV_ELECTRON" ] && [ "$PREV_ELECTRON" = "$CUR_ELECTRON" ]; then SKIP=0; fi
+          fi
+          if [ "$SKIP" = "0" ]; then
+            VERSION=$(node -p "require('./package.json').version")
+            zip -qj "douyin_downloader_${VERSION}_macos_${{ matrix.arch }}_asar.zip" "$APP_DIR/douyin_downloader.app/Contents/Resources/app.asar"
+            test -f "douyin_downloader_${VERSION}_macos_${{ matrix.arch }}_asar.zip"
+          else
+            echo "Electron 版本变更或无上一个 tag，跳过 asar 增量包 (prev=${PREV_TAG:-none})"
+          fi
+
       - uses: actions/upload-artifact@v6
         with:
           name: macos-${{ matrix.arch }}
-          path: douyin_downloader_*.app.tar.gz
+          path: |
+            douyin_downloader_*.app.tar.gz
+            douyin_downloader_*_asar.zip
           if-no-files-found: error
 
   windows:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v6
+        with:
+          # 需要 HEAD^ 之前的历史，用于比对上一 tag 的 Electron 版本
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
@@ -95,19 +122,41 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      - name: Package zip
+      - name: Package full zip
         shell: pwsh
         run: |
           $VERSION = (Get-Content package.json | ConvertFrom-Json).version
           if (-not (Test-Path "release/win-unpacked/douyin_downloader.exe")) { throw "missing win-unpacked exe" }
           # 压缩整个目录，解压后得到 win-unpacked 文件夹，双击其中 exe 直接运行
-          Compress-Archive -Path "release/win-unpacked" -DestinationPath "douyin_downloader_${VERSION}_windows_amd64.zip" -Force
-          if (-not (Test-Path "douyin_downloader_${VERSION}_windows_amd64.zip")) { throw "failed to create zip" }
+          Compress-Archive -Path "release/win-unpacked" -DestinationPath "douyin_downloader_${VERSION}_win_full.zip" -Force
+          if (-not (Test-Path "douyin_downloader_${VERSION}_win_full.zip")) { throw "failed to create zip" }
+
+      # Electron 未升级时额外产出 asar 增量包（只含 app.asar，几百 KB）；
+      # Electron 升级时只发全量包 —— 客户端用「附件存不存在」判定更新方式
+      - name: Package asar update zip (Electron unchanged only)
+        shell: bash
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          SKIP=1
+          if [ -n "$PREV_TAG" ]; then
+            PREV_ELECTRON=$(git show "$PREV_TAG:package.json" 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).devDependencies.electron)}catch{console.log("")}})' || true)
+            CUR_ELECTRON=$(node -p "require('./package.json').devDependencies.electron")
+            if [ -n "$PREV_ELECTRON" ] && [ "$PREV_ELECTRON" = "$CUR_ELECTRON" ]; then SKIP=0; fi
+          fi
+          if [ "$SKIP" = "0" ]; then
+            VERSION=$(node -p "require('./package.json').version")
+            pwsh -NoProfile -Command "Compress-Archive -Path 'release/win-unpacked/resources/app.asar' -DestinationPath 'douyin_downloader_${VERSION}_win_asar.zip' -Force"
+            test -f "douyin_downloader_${VERSION}_win_asar.zip"
+          else
+            echo "Electron 版本变更或无上一个 tag，跳过 asar 增量包 (prev=${PREV_TAG:-none})"
+          fi
 
       - uses: actions/upload-artifact@v6
         with:
           name: windows-amd64
-          path: douyin_downloader_*_windows_amd64.zip
+          path: |
+            douyin_downloader_*_win_full.zip
+            douyin_downloader_*_win_asar.zip
           if-no-files-found: error
 
   release:

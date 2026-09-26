@@ -5,6 +5,7 @@ import { VideoCard } from './components/VideoCard'
 import { QualityTable } from './components/QualityTable'
 import { LoginPanel } from './components/LoginPanel'
 import { ThemeToggle } from './components/ThemeToggle'
+import { UpdateModal } from './components/UpdateModal'
 import { useTheme } from './hooks/useTheme'
 
 export type DownloadState =
@@ -172,6 +173,8 @@ export default function App() {
       {!info && !loading && !error && (
         <div className="empty">粘贴一个抖音视频链接开始解析（支持短链 / 完整页 / 分享口令链接）</div>
       )}
+
+      <UpdateModal />
     </div>
   )
 }

@@ -352,3 +352,100 @@ table.quality tr:last-child td {
 .ratio-best {
   color: var(--accent);
 }
+
+/* 自动更新 */
+.update-entry {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.update-entry:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.update-card {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 340px;
+  max-width: calc(100vw - 36px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+}
+.update-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.update-title {
+  font-weight: 700;
+}
+.update-close {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.update-close:hover {
+  color: var(--text);
+}
+.update-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.update-notes {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.update-actions {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.update-proxy {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.update-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.update-error {
+  background: var(--err-bg);
+  color: var(--err);
+  border: 1px solid var(--err-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}

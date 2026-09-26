@@ -8,6 +8,8 @@ import type {
   DownloadProgress,
   DownloadDone,
   DownloadError,
+  UpdateInfo,
+  UpdateProgress,
 } from '../shared/types'
 
 function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
@@ -49,6 +51,23 @@ const api = {
   configGet: (): Promise<Config> => ipcRenderer.invoke('config:get'),
   configSet: (patch: Partial<Config>): Promise<Config> =>
     ipcRenderer.invoke('config:set', patch),
+
+  // ---------- 自动更新 ----------
+  updateGetPending: (): Promise<UpdateInfo | null> =>
+    ipcRenderer.invoke('update:getPending'),
+  updateCheck: (): Promise<IpcResult<UpdateInfo | null>> =>
+    ipcRenderer.invoke('update:check'),
+  updateDownload: (useProxy: boolean): Promise<IpcResult<null>> =>
+    ipcRenderer.invoke('update:download', useProxy),
+  updateCancelDownload: (): Promise<void> => ipcRenderer.invoke('update:cancelDownload'),
+  updateApply: (): Promise<IpcResult<null>> => ipcRenderer.invoke('update:apply'),
+  onUpdateAvailable: (cb: (p: UpdateInfo) => void): (() => void) =>
+    subscribe<UpdateInfo>('update:available', cb),
+  onUpdateProgress: (cb: (p: UpdateProgress) => void): (() => void) =>
+    subscribe<UpdateProgress>('update:progress', cb),
+  onUpdateDone: (cb: () => void): (() => void) => subscribe<null>('update:done', cb),
+  onUpdateFailed: (cb: (p: string) => void): (() => void) =>
+    subscribe<string>('update:failed', cb),
 }
 
 export type Api = typeof api
