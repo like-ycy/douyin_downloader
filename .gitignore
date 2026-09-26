@@ -1,0 +1,97 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+# build/ 是 electron-builder 资源目录（图标等），只忽略其中间产物、保留 icon
+build/*
+!build/icon.png
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+logs/
+*.log
+
+# Database
+data/
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Temporary files
+tmp/
+
+# Secrets —— 登录凭证绝不入库
+cookie.txt
+
+# python/ —— 原 CLI 已被 Electron 方案替代，整体归档为本地备份，不入库
+python/
+
+# Node / Electron
+node_modules/
+dist/
+release/
+# electron-vite 构建产物
+out/
+
+# Local development files
+# 注意：docs/ 与 python/ 是本项目核心内容，不能忽略（原模板通配规则已移除）
+tests/
+.python-version
+AGENTS.md
+CLAUDE.md
+.trae
+.omc
+.claudeignore
+.claude
+pyrightconfig.json
+.omx/
+sql/
+deploy/
+.opencode/
+.sisyphus/
+.superpowers/
+.omo
+.mimocode
+.cortexkit/
+.serena
+.workbuddy/
+
+# m0-probe —— M0 验证探针，本地留存作 M1 参考，不入库
+m0-probe/
