@@ -1,6 +1,8 @@
 # electron-builder 配置（自用分发，不签名公证）
 # mac 产物: release/mac-<arch>/douyin_downloader.app —— 双击直接运行，无安装器
-# win 产物: release/douyin_downloader-<version>.exe —— portable 免安装，双击直接运行
+# win 产物: release/win-unpacked/ → 打成 zip 绿色版分发
+#   解压一次后双击 douyin_downloader.exe 直接运行（免安装、秒开）
+#   （portable 自解压格式每次启动解压 ~250MB 要 6-7s，已弃用；nsis 需安装，也不采用）
 appId: com.wang.douyindownloader
 productName: douyin_downloader
 directories:
@@ -19,5 +21,6 @@ mac:
     - target: dir
 win:
   icon: build/icon.png
+  # dir 产出 win-unpacked/ 完整目录，由 CI/脚本打成 zip 分发
   target:
-    - target: portable
+    - target: dir

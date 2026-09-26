@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 本地打包脚本：按当前机器平台/架构自动构建，便于手动测试。
 # - macOS: 产出 .app（双击直接运行），架构跟随当前机器（arm64/x64）
-# - Windows: 产出 portable .exe（免安装，双击直接运行）
+# - Windows: 产出 win-unpacked/ 绿色目录（zip 一次后免安装秒开；portable 自解压每次要 6-7s，已弃用）
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -24,10 +24,10 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   echo ""
   echo "✓ 完成: $APP （双击运行；首次打开如被 Gatekeeper 拦，右键 -> 打开）"
 elif [[ "${OS:-}" == "Windows_NT" ]]; then
-  echo "==> Windows 打包 portable .exe ..."
-  npx electron-builder --win portable
+  echo "==> Windows 打包绿色版目录 ..."
+  npx electron-builder --win dir
   echo ""
-  echo "✓ 完成: release/douyin_downloader-*.exe （双击直接运行；如被 SmartScreen 拦，点 更多信息 -> 仍要运行）"
+  echo "✓ 完成: release/win-unpacked/ （双击其中的 douyin_downloader.exe 直接运行，免安装）"
 else
   echo "✗ 不支持的平台: $(uname -s)" >&2
   exit 1
