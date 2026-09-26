@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
 import fs from 'node:fs'
 import path from 'node:path'
-import { checkUpdate } from './checker'
+import { checkUpdate, matchWinFullAsset } from './checker'
 import {
   cleanUpdateTemp,
   cancelUpdateDownload,
@@ -27,6 +27,8 @@ import type { IpcResult, UpdateInfo } from '../../shared/types'
 let latest: UpdateInfo | null = null
 /** 下载 + 解压完成后的暂存信息 */
 let staged: { extractedDir: string; zipPath: string } | null = null
+/** 最近一次下载用的代理开关（降级补下全量包时沿用） */
+let lastUseProxy = false
 
 export function registerUpdateIpc(): void {
   ipcMain.handle('update:getPending', (): UpdateInfo | null => latest)
@@ -48,6 +50,7 @@ export function registerUpdateIpc(): void {
   ipcMain.handle(
     'update:download',
     async (_e, useProxy: boolean): Promise<IpcResult<null>> => {
+      lastUseProxy = useProxy
       if (!latest?.hasUpdate || !latest.downloadUrl) {
         return { ok: false, message: '当前没有可下载的更新' }
       }
@@ -72,23 +75,22 @@ export function registerUpdateIpc(): void {
     if (isDownloading()) cancelUpdateDownload()
   })
 
-  ipcMain.handle('update:apply', (): IpcResult<null> => {
+  ipcMain.handle('update:apply', async (): Promise<IpcResult<null>> => {
     if (!latest?.hasUpdate) return { ok: false, message: '当前没有待应用的更新' }
     if (!staged) return { ok: false, message: '更新包尚未下载完成' }
     try {
       if (latest.updateType === 'asar') {
         const newAsar = findExtractedAsar(staged.extractedDir)
         if (!newAsar) throw new Error('更新包里没有找到 app.asar')
-        // 成功后进程会 relaunch 并退出；rename 失败时抛错提示走全量
         try {
+          // 成功后进程会 relaunch 并退出（不返回）
           applyAsarUpdate(newAsar, latest.latestVersion)
         } catch (asarErr) {
-          if (isWindows()) {
-            log('update', `asar 增量失败，降级全量: ${(asarErr as Error).message}`)
-            applyFullUpdateWin(staged.extractedDir)
-          } else {
-            throw asarErr
-          }
+          if (!isWindows()) throw asarErr
+          // Windows 降级：手头是增量包（只有 app.asar，没有 win-unpacked），
+          // 无法就地走全量 —— 自动补下全量包，回到「待确认」状态等用户再点一次
+          log('update', `asar 增量失败，降级下载全量包: ${(asarErr as Error).message}`)
+          void fallbackFullWin()
         }
       } else {
         if (isWindows()) applyFullUpdateWin(staged.extractedDir)
@@ -102,6 +104,37 @@ export function registerUpdateIpc(): void {
       return { ok: false, message }
     }
   })
+}
+
+/** asar 增量失败后的 Windows 降级：取 Release 全量包 → 下载解压 → 换回待确认状态。 */
+async function fallbackFullWin(): Promise<void> {
+  const base = latest
+  if (!base?.hasUpdate) return
+  try {
+    const asset = await matchWinFullAsset()
+    if (!asset) throw new Error('Release 资产里没有 *_win_full.zip')
+    const fullInfo: UpdateInfo = {
+      ...base,
+      updateType: 'full',
+      downloadUrl: asset.browser_download_url,
+      assetName: asset.name,
+      assetSize: asset.size,
+      digest: asset.digest ?? '',
+    }
+    // 重置渲染层进度（applying 阶段此事件非零时会显示进度条）
+    emit('update:progress', { downloaded: 0, total: 0, speed: 0 })
+    const zipPath = await downloadUpdatePackage(fullInfo, lastUseProxy)
+    const extractedDir = path.join(path.dirname(zipPath), 'extracted')
+    await extractArchive(zipPath, extractedDir)
+    latest = fullInfo
+    staged = { extractedDir, zipPath }
+    emit('update:available', fullInfo) // 渲染层回 idle
+    emit('update:done', null) // 再推到 ready，等用户点「重启并更新」
+    log('update', '全量降级包已就绪，等待用户确认应用')
+  } catch (e) {
+    log('update', `全量降级失败: ${(e as Error).message}`)
+    emit('update:failed', `全量更新包准备失败：${(e as Error).message}，请到 Release 页手动下载安装`)
+  }
 }
 
 /** 主进程启动时调用：清理残留 + 延迟 3 秒后台检查更新。 */

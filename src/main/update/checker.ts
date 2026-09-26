@@ -60,6 +60,13 @@ function matchAsset(assets: ReleaseAsset[]): { asset: ReleaseAsset; type: Update
   return null
 }
 
+/** 取 Release 里的 Windows 全量包资产（asar 增量应用失败时降级下载用）。 */
+export async function matchWinFullAsset(): Promise<ReleaseAsset | null> {
+  const rel = await fetchLatestRelease()
+  const lower = (s: string): string => s.toLowerCase()
+  return rel.assets.find((a) => lower(a.name).endsWith('_win_full.zip')) ?? null
+}
+
 /** 查询最新 release 并与当前版本比较。任何网络/解析错误直接抛出，由调用方决定降级。 */
 export async function checkUpdate(): Promise<UpdateInfo> {
   const rel = await fetchLatestRelease()

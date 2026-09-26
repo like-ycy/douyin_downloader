@@ -36,7 +36,12 @@ export function UpdateModal(): ReactElement | null {
     })
     const unA = window.api.onUpdateAvailable((info) => {
       latestRef.current = info
-      setPhase((p) => (p.kind === 'downloading' ? p : { kind: 'idle', info }))
+      setPhase((p) => {
+        if (p.kind === 'downloading') return p
+        // applying 中收到新 available：asar 增量失败，主进程已补好全量包 → 直接回待确认
+        if (p.kind === 'applying') return { kind: 'ready', info }
+        return { kind: 'idle', info }
+      })
     })
     const unP = window.api.onUpdateProgress((p) => setProgress(p))
     const unD = window.api.onUpdateDone(() => {
@@ -44,7 +49,12 @@ export function UpdateModal(): ReactElement | null {
     })
     const unF = window.api.onUpdateFailed((msg) => {
       setError(msg)
-      setPhase((p) => (p.kind === 'downloading' && latestRef.current ? { kind: 'idle', info: latestRef.current } : p))
+      // downloading / applying 中失败都要回到 ready，避免卡死在进度或替换界面
+      setPhase((p) =>
+        (p.kind === 'downloading' || p.kind === 'applying') && latestRef.current
+          ? { kind: 'ready', info: latestRef.current }
+          : p
+      )
     })
     return () => {
       unA()
@@ -95,6 +105,7 @@ export function UpdateModal(): ReactElement | null {
 
   const handleApply = useCallback(async (): Promise<void> => {
     setError('')
+    setProgress({ downloaded: 0, total: 0, speed: 0 }) // 清掉上次下载的进度残留
     const res = await window.api.updateApply()
     if (!res.ok) {
       setError(res.message)
@@ -196,6 +207,20 @@ export function UpdateModal(): ReactElement | null {
               <button className="btn-dl" onClick={() => void handleApply()}>
                 重启并更新
               </button>
+            </div>
+          ) : progress.total > 0 ? (
+            // asar 增量失败自动降级：主进程正在补下全量包，进度实时可见
+            <div className="progress-wrap">
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${Math.min(100, (progress.downloaded / progress.total) * 100)}%` }}
+                />
+              </div>
+              <span className="progress-text">
+                {fmtBytes(progress.downloaded)}
+                {progress.total > 0 && ` / ${fmtBytes(progress.total)}`} · {fmtBytes(progress.speed)}/s
+              </span>
             </div>
           ) : (
             <div className="update-sub">正在替换文件并重启……</div>

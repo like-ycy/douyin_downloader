@@ -1,7 +1,7 @@
 {
   "name": "douyin-downloader",
   "productName": "抖音下载器",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "抖音视频画质探测与下载（Electron）",
   "main": "out/main/index.js",
   "scripts": {

@@ -54,7 +54,7 @@
 ```
 
 - `resources` 目录定位用 `process.resourcesPath`（Electron 内置，指向 `<exe目录>\resources`，mac 上是 `.app/Contents/Resources`），不要自己拼路径。
-- **关键假设（待实测）**：Windows 下运行中的 `app.asar` 能否 rename。大概率可以（Node/Chromium 打开文件默认带 share-delete）；**若 rename 抛 EPERM/EBUSY，降级走全量 bat 流程**（只 robocopy 覆盖这一个文件即可），所以增量不存在"卡死"风险。
+- **关键假设（待实测）**：Windows 下运行中的 `app.asar` 能否 rename。大概率可以（Node/Chromium 打开文件默认带 share-delete）；**若 rename 抛 EPERM/EBUSY，自动降级：主进程补下 Release 里的 `*_win_full.zip`，下载解压后回到「待确认」状态，用户再点一次「重启并更新」走全量 bat 流程**（v0.1.3 修复：早期版本降级时误用增量包目录找 win-unpacked，必然报"更新包里没有找到 win-unpacked 目录"）。增量不存在"卡死"风险。
 - 一期不做"新 asar 启动失败自动回滚"：`.old` 保留在 resources 下，极端情况用户手动改回即可。启动失败回滚（连续 N 次崩溃换回 .old）列 P2。
 - macOS 同一逻辑适用（mac 无文件锁问题，rename 一定成功）。
 
