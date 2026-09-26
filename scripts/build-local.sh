@@ -17,7 +17,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   # electron-builder 输出目录：arm64 -> mac-arm64，x64 -> mac（无后缀）
   APP_DIR="release/mac-$ARCH"
   [[ -d "$APP_DIR" ]] || APP_DIR="release/mac"
-  APP="$APP_DIR/抖音下载器.app"
+  APP="$APP_DIR/douyin_downloader.app"
   echo "==> ad-hoc 签名: $APP"
   codesign --force --deep -s - "$APP"
   codesign --verify "$APP" && echo "    签名校验通过"
@@ -27,7 +27,7 @@ elif [[ "${OS:-}" == "Windows_NT" ]]; then
   echo "==> Windows 打包 portable .exe ..."
   npx electron-builder --win portable
   echo ""
-  echo "✓ 完成: release/抖音下载器-*.exe （双击直接运行；如被 SmartScreen 拦，点 更多信息 -> 仍要运行）"
+  echo "✓ 完成: release/douyin_downloader-*.exe （双击直接运行；如被 SmartScreen 拦，点 更多信息 -> 仍要运行）"
 else
   echo "✗ 不支持的平台: $(uname -s)" >&2
   exit 1

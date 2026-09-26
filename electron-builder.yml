@@ -1,8 +1,8 @@
 # electron-builder 配置（自用分发，不签名公证）
-# mac 产物: release/mac-<arch>/抖音下载器.app —— 双击直接运行，无安装器
-# win 产物: release/抖音下载器-<version>.exe —— portable 免安装，双击直接运行
+# mac 产物: release/mac-<arch>/douyin_downloader.app —— 双击直接运行，无安装器
+# win 产物: release/douyin_downloader-<version>.exe —— portable 免安装，双击直接运行
 appId: com.wang.douyindownloader
-productName: 抖音下载器
+productName: douyin_downloader
 directories:
   output: release
   buildResources: build

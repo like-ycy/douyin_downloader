@@ -51,16 +51,16 @@ jobs:
         run: |
           APP_DIR=$(find release -maxdepth 1 -type d -name 'mac*' | head -1)
           echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
-          APP="$APP_DIR/抖音下载器.app"
+          APP="$APP_DIR/douyin_downloader.app"
           codesign --force --deep -s - "$APP"
           codesign --verify "$APP"
 
       - name: Package zip (保留 .app 内符号链接)
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          test -d "$APP_DIR/抖音下载器.app" || { echo "missing .app"; ls -R release; exit 1; }
+          test -d "$APP_DIR/douyin_downloader.app" || { echo "missing .app"; ls -R release; exit 1; }
           # -y 保留 .app 内符号链接，避免解压后应用包损坏
-          (cd "$APP_DIR" && zip -qyr "$GITHUB_WORKSPACE/douyin_downloader_${VERSION}_macos_${{ matrix.arch }}.app.zip" 抖音下载器.app)
+          (cd "$APP_DIR" && zip -qyr "$GITHUB_WORKSPACE/douyin_downloader_${VERSION}_macos_${{ matrix.arch }}.app.zip" douyin_downloader.app)
           test -f "douyin_downloader_${VERSION}_macos_${{ matrix.arch }}.app.zip"
 
       - uses: actions/upload-artifact@v4
