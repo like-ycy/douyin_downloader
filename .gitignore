@@ -12,7 +12,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# /lib/ 只锚定仓库根目录（Python 模板残留）；不加斜杠前缀会误伤 src/renderer/lib/
+/lib/
 lib64/
 parts/
 sdist/
