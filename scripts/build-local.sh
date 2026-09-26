@@ -14,7 +14,10 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   npx electron-builder --mac dir
   # electron-builder 无证书时会跳过签名，但遗留的 Electron linker 签名与资源不符，
   # 可能无法启动 —— 这里强制做 ad-hoc bundle 签名（Apple Silicon 必需）
-  APP="$(ls -d release/mac-*/抖音下载器.app | head -1)"
+  # electron-builder 输出目录：arm64 -> mac-arm64，x64 -> mac（无后缀）
+  APP_DIR="release/mac-$ARCH"
+  [[ -d "$APP_DIR" ]] || APP_DIR="release/mac"
+  APP="$APP_DIR/抖音下载器.app"
   echo "==> ad-hoc 签名: $APP"
   codesign --force --deep -s - "$APP"
   codesign --verify "$APP" && echo "    签名校验通过"
