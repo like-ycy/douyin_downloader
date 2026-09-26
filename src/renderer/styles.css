@@ -8,6 +8,30 @@
   --accent: #fe2c55;
   --ok: #0a7d32;
   --err: #c0392b;
+  --warn: #b8860b;
+  --err-bg: #fdecea;
+  --err-border: #f5c6c0;
+  --placeholder: #eeeeee;
+  --th-bg: #fafafb;
+  --track: #ececf0;
+}
+
+/* 暗色主题：html.dark 由 lib/theme.ts 切换 */
+html.dark {
+  color-scheme: dark;
+  --bg: #14161a;
+  --card: #1e2126;
+  --border: #2f333b;
+  --text: #e8eaed;
+  --muted: #9aa0a8;
+  --ok: #4ade80;
+  --err: #f87171;
+  --warn: #e0b23f;
+  --err-bg: #3a201f;
+  --err-border: #5c312e;
+  --placeholder: #2a2d33;
+  --th-bg: #23262c;
+  --track: #2f333b;
 }
 
 * {
@@ -41,6 +65,11 @@ body {
   font-size: 17px;
   font-weight: 700;
 }
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .auth {
   font-size: 12px;
   display: inline-flex;
@@ -49,13 +78,36 @@ body {
 }
 .auth-waiting,
 .waiting {
-  color: #b8860b;
+  color: var(--warn);
 }
 .auth-ok {
   color: var(--ok);
 }
 .auth-no {
   color: var(--muted);
+}
+
+/* 主题切换按钮 */
+.btn-theme {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-theme svg {
+  width: 17px;
+  height: 17px;
+}
+.btn-theme:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* 搜索框 */
@@ -113,9 +165,9 @@ body {
   }
 }
 .error {
-  background: #fdecea;
+  background: var(--err-bg);
   color: var(--err);
-  border: 1px solid #f5c6c0;
+  border: 1px solid var(--err-border);
   border-radius: 10px;
   padding: 12px 14px;
   margin-bottom: 14px;
@@ -143,7 +195,7 @@ body {
   height: 170px;
   object-fit: cover;
   border-radius: 8px;
-  background: #eee;
+  background: var(--placeholder);
   flex-shrink: 0;
 }
 .meta {
@@ -226,7 +278,7 @@ table.quality th {
   font-size: 12px;
   color: var(--muted);
   font-weight: 600;
-  background: #fafafb;
+  background: var(--th-bg);
 }
 table.quality tr:last-child td {
   border-bottom: none;
@@ -257,7 +309,7 @@ table.quality tr:last-child td {
 .progress-bar {
   height: 6px;
   border-radius: 3px;
-  background: #ececf0;
+  background: var(--track);
   overflow: hidden;
 }
 .progress-fill {

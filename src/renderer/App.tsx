@@ -4,6 +4,8 @@ import { SearchBar } from './components/SearchBar'
 import { VideoCard } from './components/VideoCard'
 import { QualityTable } from './components/QualityTable'
 import { LoginPanel } from './components/LoginPanel'
+import { ThemeToggle } from './components/ThemeToggle'
+import { useTheme } from './hooks/useTheme'
 
 export type DownloadState =
   | { status: 'downloading'; downloaded: number; total: number; speed: number }
@@ -11,6 +13,7 @@ export type DownloadState =
   | { status: 'error'; message: string }
 
 export default function App() {
+  const { preference: themePreference, themeLabel, toggleTheme } = useTheme()
   const [info, setInfo] = useState<VideoInfo | null>(null)
   const [lastLink, setLastLink] = useState('')
   const [loading, setLoading] = useState(false)
@@ -126,13 +129,16 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <span className="title">抖音下载器</span>
-        <LoginPanel
-          loggedIn={loggedIn}
-          waiting={loginWaiting}
-          onLogin={handleLogin}
-          onCancelLogin={handleCancelLogin}
-          onLogout={handleLogout}
-        />
+        <div className="topbar-right">
+          <ThemeToggle preference={themePreference} label={themeLabel} onToggle={toggleTheme} />
+          <LoginPanel
+            loggedIn={loggedIn}
+            waiting={loginWaiting}
+            onLogin={handleLogin}
+            onCancelLogin={handleCancelLogin}
+            onLogout={handleLogout}
+          />
+        </div>
       </header>
 
       <SearchBar disabled={loading} onSubmit={handleInspect} />
