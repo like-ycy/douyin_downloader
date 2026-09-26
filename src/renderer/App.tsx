@@ -131,6 +131,7 @@ export default function App() {
       <header className="topbar">
         <span className="title">抖音下载器</span>
         <div className="topbar-right">
+          <UpdateModal />
           <ThemeToggle preference={themePreference} label={themeLabel} onToggle={toggleTheme} />
           <LoginPanel
             loggedIn={loggedIn}
@@ -173,8 +174,6 @@ export default function App() {
       {!info && !loading && !error && (
         <div className="empty">粘贴一个抖音视频链接开始解析（支持短链 / 完整页 / 分享口令链接）</div>
       )}
-
-      <UpdateModal />
     </div>
   )
 }

@@ -355,8 +355,8 @@ table.quality tr:last-child td {
 
 /* 自动更新 */
 .update-entry {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
