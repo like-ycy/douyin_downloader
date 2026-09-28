@@ -12,6 +12,17 @@ files:
   - out/**
   - package.json
   - "!**/*.map"
+# 裁剪 Electron 自带语言包：win 版 locales 共 55 个文件 / 48.3MB，只留中英后剩 1.1MB，
+# 解压体积直降 47.2MB（本项目界面纯中文，无 i18n 依赖，不影响功能）。
+# ⚠️ 命名不可省：electron-builder 按「文件基名小写后精确比对」匹配（ElectronFramework.js），
+#    Windows 是 zh-CN.pak / en-US.pak（连字符），macOS 是 zh_CN.lproj / en_US.lproj（下划线），
+#    两套写法不通用；只写连字符版本会让 mac 侧的中文资源被静默删除、且不报错。
+# 不想要英文兜底可删掉 en-US / en_US 两项，再省 0.56MB。
+electronLanguages:
+  - zh-CN
+  - zh_CN
+  - en-US
+  - en_US
 mac:
   category: public.app-category.video
   icon: build/icon.png
