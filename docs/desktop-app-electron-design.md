@@ -95,7 +95,7 @@
 | Cookie 存储 | `app.getPath('userData')/cookie.txt`，权限 0600 | **格式与现有 `cookie.txt` 完全一致**，可与 Python 脚本互相复用 |
 | 日志        | `electron-log`，落 `userData/logs/`            | 排查风控问题                                       |
 | 数据库       | 无（本期不存历史）                                    | —                                            |
-| 目标平台      | **macOS（开发 + 日常）+ Windows（常用）**               | 双平台都要能用，见下方「平台策略」                             |
+| 目标平台      | **macOS（开发 + 日常）+ Windows（常用）**              | 双平台都要能用，见下方「平台策略」                            |
 
 **为什么网络请求必须走主进程而不是渲染进程**：渲染进程请求 `douyin.com` 会被 CORS 拦截；且 Cookie 与 UA 需要精确控制。所有请求一律走主进程。
 
@@ -103,16 +103,17 @@
 
 ### 平台策略
 
-| 角色       | macOS                                            | Windows                                    |
-| -------- | ------------------------------------------------ | ------------------------------------------ |
-| 定位       | 开发与日常测试                                          | 高频使用目标端                                     |
-| 产物       | `.dmg`（内含 `.app`）                               | NSIS 安装包 `.exe`                            |
-| 构建方式     | **本机直接构建**（dmg 只能在 macOS 上产出）                    | 本机出测试包，**正式包建议 GitHub Actions 构建**         |
-| 数据目录     | `~/Library/Application Support/douyin-downloader` | `%APPDATA%\douyin-downloader`              |
+| 角色   | macOS                                             | Windows                            |
+| ---- | ------------------------------------------------- | ---------------------------------- |
+| 定位   | 开发与日常测试                                           | 高频使用目标端                            |
+| 产物   | `.dmg`（内含 `.app`）                                 | NSIS 安装包 `.exe`                    |
+| 构建方式 | **本机直接构建**（dmg 只能在 macOS 上产出）                     | 本机出测试包，**正式包建议 GitHub Actions 构建** |
+| 数据目录 | `~/Library/Application Support/douyin-downloader` | `%APPDATA%\douyin-downloader`      |
 
 **构建为什么不都放在本机**：`dmg` 依赖 macOS 系统能力，只能在 Mac 上产出；Windows 的 NSIS 包虽可在 macOS 上交叉产出（electron-builder 支持），但涉及图标、版本资源、签名等细节，原生 Windows 环境更稳。日常在 Mac 上出一个测试用 Windows 包足够，正式 Windows 包交给 CI（`windows-latest` runner）最省事。
 
 > 由此产生的代码约束（写代码时必须遵守）：
+>
 > 1. 路径拼接一律 `path.join`，禁止硬编码 `/` 或 `\`；
 > 2. 数据目录一律 `app.getPath('userData')`，不手写平台路径；
 > 3. 文件名清洗必须同时满足两套规则，见 §8 Windows 文件名一节。
@@ -215,6 +216,8 @@ douyin-downloader/
 │           ├── VideoCard.tsx     # 视频信息
 │           └── QualityTable.tsx  # 画质表 + 每档下载按钮/进度
 ```
+
+
 
 ---
 

@@ -7,6 +7,8 @@ import {
   type AwemeDetail,
 } from './parse'
 import { probeQualities } from './probe'
+import { fetchDetailViaBrowser } from './detailBrowser'
+import { log } from '../log'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -39,7 +41,7 @@ function toVideoInfo(item: AwemeDetail, qualities: VideoInfo['qualities']): Vide
   }
 }
 
-/** 完整解析链路：链接 -> aweme_id -> 详情（页面正则优先，详情 API 兜底）-> 画质探测。 */
+/** 完整解析链路：链接 -> aweme_id -> 详情（页面正则 -> 隐藏浏览器 -> 详情 API）-> 画质探测。 */
 export async function inspectVideo(link: string): Promise<VideoInfo> {
   // 1) 解析 aweme_id
   const { awemeId, finalUrl } = await resolveAwemeId(link)
@@ -47,7 +49,10 @@ export async function inspectVideo(link: string): Promise<VideoInfo> {
     throw new Error(`没能从链接里解析出 aweme_id（最终 URL: ${finalUrl}），请确认是有效的抖音视频链接。`)
   }
 
-  // 2) 取 ROUTER_DATA，失败则详情 API 兜底
+  // 2) 取视频详情。三级链路（2026-10-09 Argus 风控后）：
+  //    a. 页面内嵌 _ROUTER_DATA（改版后已死，但保留——成本仅一次 HTTP，万一恢复可秒回）
+  //    b. 隐藏浏览器捡页面自带签名的 aweme/detail（现行主通道，见 detailBrowser.ts）
+  //    c. 详情 API 裸 HTTP（Argus 后基本 403，仅作最后兜底）
   let item: AwemeDetail | null = null
   let pageError: string | null = null
   const router = await fetchRouterData(awemeId)
@@ -56,11 +61,21 @@ export async function inspectVideo(link: string): Promise<VideoInfo> {
   }
   if (!item) {
     pageError = router.error
+    try {
+      item = await fetchDetailViaBrowser(awemeId)
+    } catch (e) {
+      pageError = `浏览器取数失败: ${(e as Error).message}`
+      log('inspect', pageError)
+    }
+  }
+  if (!item) {
     item = await fetchDetailApi(awemeId)
   }
   if (!item) {
-    const hint = pageError ? `（页面解析失败: ${pageError}）` : ''
-    throw new Error(`无法获取视频数据${hint}。建议：确认链接有效、内容未下架，必要时重新抓取登录 Cookie。`)
+    const hint = pageError ? `（${pageError}）` : ''
+    throw new Error(
+      `无法获取视频数据${hint}。建议：若提示风控/403，退出登录后重新扫码；确认链接有效、内容未下架。`
+    )
   }
 
   // 3) 画质探测
