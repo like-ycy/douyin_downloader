@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, app } from 'electron'
 import fs from 'node:fs'
 import path from 'node:path'
 import { checkUpdate, matchWinFullAsset } from './checker'
@@ -137,10 +137,16 @@ async function fallbackFullWin(): Promise<void> {
   }
 }
 
-/** 主进程启动时调用：清理残留 + 延迟 3 秒后台检查更新。 */
+/** 主进程启动时调用：清理残留 + 延迟 3 秒后台检查更新。
+ *  dev 环境跳过检查：本地 package.json 版本落后于最新 tag 时会误报"有更新"。 */
 export function startUpdateWatch(): void {
   startupUpdateConfirm() // 上次 asar 更新的成功确认与 .old 清理
   cleanUpdateTemp() // %TEMP% 残留清扫
+
+  if (!app.isPackaged) {
+    log('update', 'dev 环境，跳过启动更新检查')
+    return
+  }
 
   setTimeout(() => {
     void checkUpdate()
